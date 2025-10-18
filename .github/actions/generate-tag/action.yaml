@@ -1,0 +1,32 @@
+name: 'Generate Image Tag'
+description: 'Generate image tag based on workflow trigger (PR or main branch push)'
+inputs:
+  target-branch:
+    description: 'The target branch for the tag generation (default: main)'
+    required: false
+    default: 'main'
+outputs:
+  tag:
+    description: 'Generated image tag'
+    value: ${{ steps.generate-tag.outputs.tag }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Generate Tag
+      id: generate-tag
+      shell: bash
+      run: |
+        SHORT_HASH=$(echo $GITHUB_SHA | cut -c1-7)
+        
+        if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
+          TAG="PR-${SHORT_HASH}"
+        elif [ "$GITHUB_EVENT_NAME" == "push" ] && [ "$GITHUB_REF" == "refs/heads/${{ inputs.target-branch }}" ]; then
+          DATE=$(date +%Y%m%d)
+          TAG="${DATE}-${SHORT_HASH}"
+        else
+          echo "This action only supports pull requests and pushes to the main branch. Current event: $GITHUB_EVENT_NAME on ref $GITHUB_REF"
+          exit 1
+        fi
+        
+        echo "tag=${TAG}" >> $GITHUB_OUTPUT
+        echo "Generated tag: ${TAG}"
