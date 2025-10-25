@@ -1,0 +1,59 @@
+name: 'Cleanup PR Tags'
+description: 'Delete all Docker image tags associated with a closed/merged PR'
+inputs:
+  pr-number:
+    description: 'The PR number to cleanup tags for'
+    required: true
+  github-token:
+    description: 'GitHub token with packages:delete permission'
+    required: true
+outputs:
+  deleted-tags:
+    description: 'List of deleted tags'
+    value: ${{ steps.cleanup.outputs.deleted_tags }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Cleanup PR Tags
+      id: cleanup
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        PR_NUMBER="${{ inputs.pr-number }}"
+        REPO="${{ github.repository }}"
+        OWNER="${{ github.repository_owner }}"
+        
+        echo "Searching for tags matching PR-${PR_NUMBER}-*"
+        
+        # Get all packages in the repository
+        PACKAGES=$(gh api -H "Accept: application/vnd.github+json" \
+          "/orgs/${OWNER}/packages?package_type=container" | jq -r '.[].name')
+        
+        DELETED_TAGS=""
+        
+        for PACKAGE in $PACKAGES; do
+          echo "Checking package: $PACKAGE"
+          
+          # Get all versions/tags for this package
+          VERSIONS=$(gh api -H "Accept: application/vnd.github+json" \
+            "/orgs/${OWNER}/packages/container/${PACKAGE}/versions" | \
+            jq -r --arg pattern "PR-${PR_NUMBER}-" \
+            '.[] | select(.metadata.container.tags[]? | startswith($pattern)) | .id')
+          
+          for VERSION_ID in $VERSIONS; do
+            TAG_NAME=$(gh api -H "Accept: application/vnd.github+json" \
+              "/orgs/${OWNER}/packages/container/${PACKAGE}/versions/${VERSION_ID}" | \
+              jq -r '.metadata.container.tags[0]')
+            
+            echo "Deleting tag: ${TAG_NAME} (version ID: ${VERSION_ID})"
+            
+            gh api --method DELETE -H "Accept: application/vnd.github+json" \
+              "/orgs/${OWNER}/packages/container/${PACKAGE}/versions/${VERSION_ID}"
+            
+            DELETED_TAGS="${DELETED_TAGS}${TAG_NAME} "
+          done
+        done
+        
+        echo "deleted_tags=${DELETED_TAGS}" >> $GITHUB_OUTPUT
+        echo "Cleanup complete. Deleted tags: ${DELETED_TAGS}"

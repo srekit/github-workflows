@@ -1,0 +1,86 @@
+name: Detect Changed Files
+description: Detect changed files in specified folders and output a matrix for further jobs.
+inputs:
+  ignore-dirs:
+    description: 'Comma-separated list of directories to ignore'
+    required: false
+    default: '.github/**'
+outputs:
+  changed_dirs_matrix:
+    description: 'JSON array of changed directories for matrix builds'
+    value: ${{ steps.set-matrix.outputs.final_matrix }}
+runs:
+  using: 'composite'
+  steps:
+    - name: ⬇️ Checkout code (Deep Fetch & Token)
+      id: checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get changed Dockerfile directories
+      id: changed-files
+      uses: tj-actions/changed-files@v47
+      with:
+        files_ignore: ${{ inputs.ignore-dirs }}
+
+    - name: List all changed files
+      id: list-changed-files
+      env:
+        ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+      shell: bash
+      run: |
+        for file in ${ALL_CHANGED_FILES}; do
+          echo "$file was changed"
+        done 
+
+    - name: Set Final Matrix Output (First Root Directories of Changed Files)
+      id: set-matrix
+      shell: bash
+      run: |
+        CHANGED_FILES="${{ steps.changed-files.outputs.all_changed_files }}"
+
+        if [[ -z "$CHANGED_FILES" ]]; then
+          echo "final_matrix=[]" >> $GITHUB_OUTPUT
+          echo "DEBUG: No changes detected, skipping build"
+          exit 0
+        fi
+
+        # Extract unique first-level directory names from changed files
+        DIR_LIST=""
+        for file in $CHANGED_FILES; do
+          # Only process files that contain a path separator (not root-level files)
+          if [[ "$file" == *"/"* ]]; then
+            # Extract first-level directory
+            dir=$(echo "$file" | cut -d'/' -f1)
+            # Add to list if not already present and directory exists
+            if [[ -d "$dir" ]] && [[ ! " $DIR_LIST " =~ " $dir " ]]; then
+              DIR_LIST="$DIR_LIST $dir"
+            fi
+          fi
+        done
+
+        # Remove leading/trailing spaces
+        DIR_LIST=$(echo "$DIR_LIST" | xargs)
+
+        if [[ -z "$DIR_LIST" ]]; then
+          echo "final_matrix=[]" >> $GITHUB_OUTPUT
+          echo "DEBUG: No directory changes detected"
+          exit 0
+        fi
+
+        # Build JSON array
+        JSON_ARRAY="["
+        FIRST=true
+        for dir in $DIR_LIST; do
+          if [ "$FIRST" = true ]; then
+            JSON_ARRAY="${JSON_ARRAY}\"${dir}\""
+            FIRST=false
+          else
+            JSON_ARRAY="${JSON_ARRAY},\"${dir}\""
+          fi
+        done
+        JSON_ARRAY="${JSON_ARRAY}]"
+
+        echo "final_matrix=$JSON_ARRAY" >> $GITHUB_OUTPUT
+        echo "DEBUG: Final matrix output set to: $JSON_ARRAY"

@@ -19,7 +19,8 @@ runs:
         SHORT_HASH=$(echo $GITHUB_SHA | cut -c1-7)
         
         if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
-          TAG="PR-${SHORT_HASH}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          TAG="PR-${PR_NUMBER}-${SHORT_HASH}"
         elif [ "$GITHUB_EVENT_NAME" == "push" ] && [ "$GITHUB_REF" == "refs/heads/${{ inputs.target-branch }}" ]; then
           DATE=$(date +%Y%m%d)
           TAG="${DATE}-${SHORT_HASH}"
