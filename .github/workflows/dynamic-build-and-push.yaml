@@ -37,7 +37,7 @@ jobs:
 
       - name: Detect Changed Directories
         id: detect-changes
-        uses: srekit/github-workflows/.github/actions/detect-files-changes@feature/workflow-dynamic-build-and-push
+        uses: srekit/github-workflows/.github/actions/detect-files-changes@main
         with:
           ignore-dirs: ${{ inputs.ignore-dirs }}
 
@@ -67,7 +67,7 @@ jobs:
 
       - name: Generate image tag
         id: generate-tag
-        uses: srekit/github-workflows/.github/actions/generate-tag@feature/workflow-dynamic-build-and-push
+        uses: srekit/github-workflows/.github/actions/generate-tag@main
         with:
           target-branch: ${{ inputs.target-branch }}
 
@@ -110,7 +110,7 @@ jobs:
 
       - name: Cleanup PR Tags
         id: cleanup-pr-tags
-        uses: srekit/github-workflows/.github/actions/cleanup-pr-tags@feature/workflow-dynamic-build-and-push
+        uses: srekit/github-workflows/.github/actions/cleanup-pr-tags@main
         with:
           pr-number: ${{ github.event.pull_request.number }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
