@@ -9,13 +9,14 @@ on:
         type: string
         default: 'ghcr.io/srekit/custom-images/build-poetry:20251101-67300d1'
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   quality-checks:
     name: Quality Checks
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
     container:
       image: ${{ inputs.poetry-image }}
       credentials:
