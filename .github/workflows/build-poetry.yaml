@@ -17,9 +17,6 @@ jobs:
   quality-checks:
     name: Quality Checks
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
     container:
       image: ${{ inputs.poetry-image }}
       credentials:
@@ -30,7 +27,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Poetry Quality Checks
-        uses: ./.github/actions/poetry-quality-checks
+        uses: ./.github/actions/poetry-quality-checks@feature/build-poetry-workflow
 
   #security-scan:
   #  name: Security Scan
