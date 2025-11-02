@@ -60,12 +60,21 @@ runs:
       shell: bash
       run: |
         echo "::group::pytest Coverage Results"
-        poetry run pytest --cov=. --cov-report=xml --cov-report=term
+        poetry run pytest --cov=. --cov-report=html --cov-report=term --cov-report=json
+        poetry run coverage report --format=markdown > coverage.md
         echo "::endgroup::"
 
-    - name: Upload Coverage Reports
-      if: inputs.upload-coverage == 'true' && always()
-      uses: codecov/codecov-action@v4
+    - name: Upload Coverage HTML
+      if: always()
+      uses: actions/upload-artifact@v4
       with:
-        files: ./coverage.xml
-        fail_ci_if_error: false
+        name: coverage-report
+        path: htmlcov/
+        retention-days: 30
+
+    - name: Comment Coverage on PR
+      if: github.event_name == 'pull_request' && always()
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        path: coverage.md
+        header: coverage-report
