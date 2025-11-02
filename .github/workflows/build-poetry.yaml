@@ -7,7 +7,7 @@ on:
         description: 'Container image to use for building'
         required: false
         type: string
-        default: 'ghcr.io/srekit/custom-images/build-poetry:20251101-67300d1'
+        default: 'ghcr.io/srekit/custom-images/build-poetry:pr-3-a1d2d7d'
 
 permissions:
   contents: read
