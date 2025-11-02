@@ -35,7 +35,10 @@ runs:
 
     - name: Install Dependencies
       shell: bash
-      run: poetry install --with dev
+      run: |
+        echo "::group::Poetry Install Results"
+        poetry install --with dev
+        echo "::endgroup::"
 
     - name: Run Linter (Ruff)
       shell: bash
