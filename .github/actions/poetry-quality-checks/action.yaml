@@ -2,18 +2,21 @@ name: Poetry Quality Checks
 description: Run linting, formatting, type checking, and tests with coverage for Poetry projects
 
 inputs:
-  python-version:
-    description: 'Python version to use'
-    required: false
-    default: '3.11'
-  poetry-version:
-    description: 'Poetry version to install'
-    required: false
-    default: '1.8.0'
+  github-token:
+    description: 'GitHub token for posting PR comments'
+    required: true
   mypy-continue-on-error:
     description: 'Whether to continue on mypy errors'
     required: false
     default: 'false'
+  poetry-version:
+    description: 'Poetry version to install'
+    required: false
+    default: '1.8.0'
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.14'
   upload-coverage:
     description: 'Whether to upload coverage to Codecov'
     required: false
@@ -78,3 +81,4 @@ runs:
       with:
         path: coverage.md
         header: coverage-report
+        GITHUB_TOKEN: ${{ inputs.github-token }}

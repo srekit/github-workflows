@@ -28,6 +28,8 @@ jobs:
 
       - name: Run Poetry Quality Checks
         uses: srekit/github-workflows/.github/actions/poetry-quality-checks@feature/build-poetry-workflow
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
 
   #security-scan:
