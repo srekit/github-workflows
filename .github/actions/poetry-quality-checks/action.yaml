@@ -1,0 +1,59 @@
+name: Poetry Quality Checks
+description: Run linting, formatting, type checking, and tests with coverage for Poetry projects
+
+inputs:
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.11'
+  poetry-version:
+    description: 'Poetry version to install'
+    required: false
+    default: '1.8.0'
+  mypy-continue-on-error:
+    description: 'Whether to continue on mypy errors'
+    required: false
+    default: 'false'
+  upload-coverage:
+    description: 'Whether to upload coverage to Codecov'
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - name: Cache Poetry Dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pypoetry
+        key: poetry-${{ runner.os }}-${{ inputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          poetry-${{ runner.os }}-${{ inputs.python-version }}-
+
+    - name: Install Dependencies
+      shell: bash
+      run: poetry install --with dev
+
+    - name: Run Linter (Ruff)
+      shell: bash
+      run: poetry run ruff check .
+
+    - name: Check Code Formatting
+      shell: bash
+      run: poetry run ruff format --check .
+
+    - name: Type Check (mypy)
+      shell: bash
+      run: poetry run mypy .
+      continue-on-error: ${{ inputs.mypy-continue-on-error == 'true' }}
+
+    - name: Run Unit Tests with Coverage
+      shell: bash
+      run: poetry run pytest --cov=. --cov-report=xml --cov-report=term
+
+    - name: Upload Coverage Reports
+      if: inputs.upload-coverage == 'true' && always()
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./coverage.xml
+        fail_ci_if_error: false

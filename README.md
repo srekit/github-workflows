@@ -15,4 +15,5 @@ This repository serves as a centralized hub for custom GitHub Actions and workfl
 
 ## Workflows
 
-- [dynamic-build-and-push](./.github/workflows/dynamic-build-and-push/README.md): A workflow template for dynamically building and pushing Docker images based on changes in the repository.
+- [build-poetry](./.github/workflows/build-poetry.md): A workflow template for building Python projects using Poetry.
+- [dynamic-build-and-push](./.github/workflows/dynamic-build-and-push.md): A workflow template for dynamically building and pushing Docker images based on changes in the repository.
