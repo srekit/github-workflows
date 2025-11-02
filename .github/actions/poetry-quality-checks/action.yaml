@@ -36,20 +36,32 @@ runs:
 
     - name: Run Linter (Ruff)
       shell: bash
-      run: poetry run ruff check .
+      run: |
+        echo "::group::Ruff Linting Results"
+        poetry run ruff check .
+        echo "::endgroup::"
 
     - name: Check Code Formatting
       shell: bash
-      run: poetry run ruff format --check .
+      run: |
+        echo "::group::Ruff Format Check Results"
+        poetry run ruff format --check .
+        echo "::endgroup::"
 
     - name: Type Check (mypy)
       shell: bash
-      run: poetry run mypy .
+      run: |
+        echo "::group::mypy Type Check Results"
+        poetry run mypy .
+        echo "::endgroup::"
       continue-on-error: ${{ inputs.mypy-continue-on-error == 'true' }}
 
     - name: Run Unit Tests with Coverage
       shell: bash
-      run: poetry run pytest --cov=. --cov-report=xml --cov-report=term
+      run: |
+        echo "::group::pytest Coverage Results"
+        poetry run pytest --cov=. --cov-report=xml --cov-report=term
+        echo "::endgroup::"
 
     - name: Upload Coverage Reports
       if: inputs.upload-coverage == 'true' && always()
