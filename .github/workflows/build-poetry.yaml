@@ -31,17 +31,27 @@ jobs:
         uses: srekit/github-workflows/.github/actions/poetry-quality-checks@feature/build-poetry-workflow
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          poetry-version: '1.8.0'
+          python-version: '3.14'
 
+      - name: Run Poetry Security Scan
+        uses: srekit/github-workflows/.github/actions/poetry-security-scan@feature/build-poetry-workflow
+        with:
+          poetry-version: '1.8.0'
+          python-version: '3.14'
 
-  #security-scan:
-  #  name: Security Scan
-  #  runs-on: ubuntu-latest
-  #  needs: quality-checks
-  #  container:
-  #    image: ${{ inputs.poetry-image }}
-  #  steps:
-  #    - uses: actions/checkout@v4
-  #    - uses: ./.github/actions/poetry-security-scan
+ # security-scan:
+ #   name: Security Scan
+ #   runs-on: ubuntu-latest
+ #   needs: quality-checks
+ #   container:
+ #     image: ${{ inputs.poetry-image }}
+ #     credentials:
+ #       username: ${{ github.actor }}
+ #       password: ${{ secrets.GITHUB_TOKEN }}
+ #   steps:
+ #     - uses: actions/checkout@v4
+ #     - uses: ./.github/actions/poetry-security-scan
 
   #build:
   #  name: Build Package

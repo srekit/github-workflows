@@ -52,7 +52,3 @@ Your project must:
 - Use Poetry for dependency management
 - Have a `pyproject.toml` file
 - Include quality check tools in your development dependencies
-
-## License
-
-See the repository's LICENSE file for details.
