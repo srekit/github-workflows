@@ -38,7 +38,7 @@ jobs:
         uses: srekit/github-workflows/.github/actions/poetry-security-scan@feature/build-poetry-workflow
         with:
           poetry-version: '1.8.0'
-          python-version: '3.14'
+          python-version: '3.13'
 
  # security-scan:
  #   name: Security Scan
