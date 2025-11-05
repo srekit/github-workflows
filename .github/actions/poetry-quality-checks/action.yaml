@@ -16,7 +16,7 @@ inputs:
   python-version:
     description: 'Python version to use'
     required: false
-    default: '3.14'
+    default: '3.13'
   upload-coverage:
     description: 'Whether to upload coverage to Codecov'
     required: false
