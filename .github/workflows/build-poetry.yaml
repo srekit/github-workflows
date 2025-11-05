@@ -32,7 +32,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           poetry-version: '1.8.0'
-          python-version: '3.14'
+          python-version: '3.13'
 
       - name: Run Poetry Security Scan
         uses: srekit/github-workflows/.github/actions/poetry-security-scan@feature/build-poetry-workflow
