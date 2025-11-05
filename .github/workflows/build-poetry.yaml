@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   quality-checks:
-    name: Quality Checks
+    name: Quality and Security Checks
     runs-on: ubuntu-latest
     container:
       image: ${{ inputs.poetry-image }}
@@ -37,6 +37,7 @@ jobs:
       - name: Run Poetry Security Scan
         uses: srekit/github-workflows/.github/actions/poetry-security-scan@feature/build-poetry-workflow
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           poetry-version: '1.8.0'
           python-version: '3.13'
 
