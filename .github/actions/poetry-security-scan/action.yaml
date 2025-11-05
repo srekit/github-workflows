@@ -41,8 +41,8 @@ runs:
       run: |
         echo "::group::Safety Vulnerability Scan"
         poetry add --group dev safety
-        poetry run safety check --json > safety-report.json || true
-        poetry run safety check || true
+        poetry run safety scan --json > safety-report.json || true
+        poetry run safety scan || true
         echo "::endgroup::"
 
     - name: Run Bandit Security Scan
