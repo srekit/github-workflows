@@ -19,7 +19,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  quality-checks:
+  quality-and-security-checks:
     name: Quality and Security Checks
     runs-on: ubuntu-latest
     container:
@@ -48,7 +48,7 @@ jobs:
   build:
     name: Build Package
     runs-on: ubuntu-latest
-    needs: [quality-checks, security-scan]
+    needs: [quality-and-security-checks]
     container:
       image: ${{ inputs.poetry-image }}
       credentials:
