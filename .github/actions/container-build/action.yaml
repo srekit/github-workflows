@@ -58,5 +58,4 @@ runs:
         context: ${{ inputs.context-path }}
         file: ${{ inputs.dockerfile-path }}
         push: true
-        tags: |
-          ${{ inputs.tags }}
+        tags: ${{ inputs.image-name }}:${{ inputs.tags }}
