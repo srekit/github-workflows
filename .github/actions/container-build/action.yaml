@@ -21,7 +21,7 @@ inputs:
     default: ''
   tags:
     description: 'Additional tags (one per line)'
-    required: false
+    required: true
     default: ''
 
 #outputs:
