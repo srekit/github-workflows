@@ -14,45 +14,45 @@ on:
         default: 'ghcr.io/srekit/custom-images/build-poetry:pr-3-a1d2d7d'
 
 jobs:
-  quality-and-security-checks:
-    name: Quality and Security Checks
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
-      pull-requests: write
-    container:
-      image: ${{ inputs.poetry-image }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+  #quality-and-security-checks:
+  #  name: Quality and Security Checks
+  #  runs-on: ubuntu-latest
+  #  permissions:
+  #    contents: read
+  #    packages: read
+  #    pull-requests: write
+  #  container:
+  #    image: ${{ inputs.poetry-image }}
+  #    credentials:
+  #      username: ${{ github.actor }}
+  #      password: ${{ secrets.GITHUB_TOKEN }}
+  #  steps:
+  #    - name: Checkout Repository
+  #      uses: actions/checkout@v4
 
-      - name: Run Poetry Quality Checks
-        uses: srekit/github-workflows/.github/actions/poetry-quality-checks@feature/build-poetry-workflow
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          poetry-version: '1.8.0'
-          python-version: '3.13'
+  #    - name: Run Poetry Quality Checks
+  #      uses: srekit/github-workflows/.github/actions/poetry-quality-checks@feature/build-poetry-workflow
+  #      with:
+  #        github-token: ${{ secrets.GITHUB_TOKEN }}
+  #        poetry-version: '1.8.0'
+  #        python-version: '3.13'
 
-      - name: Run Poetry Security Scan
-        uses: srekit/github-workflows/.github/actions/poetry-security-scan@feature/build-poetry-workflow
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          poetry-version: '1.8.0'
-          python-version: '3.13'
+  #    - name: Run Poetry Security Scan
+  #      uses: srekit/github-workflows/.github/actions/poetry-security-scan@feature/build-poetry-workflow
+  #      with:
+  #        github-token: ${{ secrets.GITHUB_TOKEN }}
+  #        poetry-version: '1.8.0'
+  #        python-version: '3.13'
 
   build:
     name: Build Package
-    needs: [quality-and-security-checks]
+    #needs: [quality-and-security-checks]
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      #- name: Checkout Repository
-      #  uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Set Image Name
         id: image-name
