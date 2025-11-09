@@ -12,7 +12,7 @@ inputs:
   dockerfile-path:
     description: 'Path to Dockerfile'
     required: false
-    default: 'Dockerfile'
+    default: './Dockerfile'
   github-token:
     description: 'GitHub token for pushing to GHCR'
     required: true
