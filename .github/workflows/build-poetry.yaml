@@ -13,15 +13,14 @@ on:
         type: string
         default: 'ghcr.io/srekit/custom-images/build-poetry:pr-3-a1d2d7d'
 
-permissions:
-  contents: read
-  packages: read
-  pull-requests: write
-
 jobs:
   quality-and-security-checks:
     name: Quality and Security Checks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      pull-requests: write
     container:
       image: ${{ inputs.poetry-image }}
       credentials:
@@ -47,13 +46,10 @@ jobs:
 
   build:
     name: Build Package
-    runs-on: ubuntu-latest
     needs: [quality-and-security-checks]
-    container:
-      image: ${{ inputs.poetry-image }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
