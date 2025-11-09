@@ -62,7 +62,7 @@ jobs:
 
       - name: Generate image tag
         id: generate-tag
-        uses: srekit/github-workflows/.github/actions/generate-tag@main
+        uses: srekit/github-workflows/.github/actions/generate-tag@feature/build-poetry-workflow
         with:
           target-branch: ${{ inputs.target-branch }}
 
