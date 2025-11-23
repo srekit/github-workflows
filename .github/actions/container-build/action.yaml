@@ -24,14 +24,6 @@ inputs:
     required: true
     default: ''
 
-#outputs:
-#  image-tag:
-#    description: 'Full image tag that was built'
-#    value: ${{ steps.meta.outputs.tags }}
-#  image-digest:
-#    description: 'Image digest'
-#    value: ${{ steps.build.outputs.digest }}
-
 runs:
   using: 'composite'
   steps:

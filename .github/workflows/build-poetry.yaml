@@ -45,7 +45,7 @@ jobs:
   #        python-version: '3.13'
 
   build:
-    name: Build Package
+    name: Generate Container Image
     #needs: [quality-and-security-checks]
     runs-on: ubuntu-latest
     permissions:
@@ -55,15 +55,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set Image Name
-        id: image-name
-        run: |
-          if [ "${{ inputs.application-name }}" ]; then
-            IMAGE_NAME="ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ inputs.application-name }}"
-          else
-            IMAGE_NAME="ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}"
-          fi
-          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_OUTPUT
+      - name: Generate Image Name
+        id: generate-image-name
+        uses: srekit/github-workflows/.github/actions/generage-image-name@feature/build-poetry-workflow
 
       - name: Generate image tag
         id: generate-tag
@@ -75,7 +69,7 @@ jobs:
         uses: srekit/github-workflows/.github/actions/container-build@feature/build-poetry-workflow
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          image-name: ${{ steps.image-name.outputs.IMAGE_NAME }}
+          image-name: ${{ steps.generate-image-name.outputs.image-name }}
           tags: ${{ steps.generate-tag.outputs.tag }}
 
       #- name: Upload Artifacts
