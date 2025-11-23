@@ -12,41 +12,51 @@ on:
         required: false
         type: string
         default: 'ghcr.io/srekit/custom-images/build-poetry:pr-3-a1d2d7d'
+      poetry-version:
+        description: 'Poetry version to use'
+        required: false
+        type: string
+        default: '1.8.0'
+      python-version:
+        description: 'Python version to use'
+        required: false
+        type: string
+        default: '3.13'
 
 jobs:
-  #quality-and-security-checks:
-  #  name: Quality and Security Checks
-  #  runs-on: ubuntu-latest
-  #  permissions:
-  #    contents: read
-  #    packages: read
-  #    pull-requests: write
-  #  container:
-  #    image: ${{ inputs.poetry-image }}
-  #    credentials:
-  #      username: ${{ github.actor }}
-  #      password: ${{ secrets.GITHUB_TOKEN }}
-  #  steps:
-  #    - name: Checkout Repository
-  #      uses: actions/checkout@v4
+  quality-and-security-checks:
+    name: Quality and Security Checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      pull-requests: write
+    container:
+      image: ${{ inputs.poetry-image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-  #    - name: Run Poetry Quality Checks
-  #      uses: srekit/github-workflows/.github/actions/poetry-quality-checks@feature/build-poetry-workflow
-  #      with:
-  #        github-token: ${{ secrets.GITHUB_TOKEN }}
-  #        poetry-version: '1.8.0'
-  #        python-version: '3.13'
+      - name: Run Poetry Quality Checks
+        uses: srekit/github-workflows/.github/actions/poetry-quality-checks@feature/build-poetry-workflow
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          poetry-version: ${{ inputs.poetry-version }}
+          python-version: ${{ inputs.python-version }}
 
-  #    - name: Run Poetry Security Scan
-  #      uses: srekit/github-workflows/.github/actions/poetry-security-scan@feature/build-poetry-workflow
-  #      with:
-  #        github-token: ${{ secrets.GITHUB_TOKEN }}
-  #        poetry-version: '1.8.0'
-  #        python-version: '3.13'
+      - name: Run Poetry Security Scan
+        uses: srekit/github-workflows/.github/actions/poetry-security-scan@feature/build-poetry-workflow
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          poetry-version: ${{ inputs.poetry-version }}
+          python-version: ${{ inputs.python-version }}
 
-  build:
+  generate-container-image:
     name: Generate Container Image
-    #needs: [quality-and-security-checks]
+    needs: [quality-and-security-checks]
     runs-on: ubuntu-latest
     permissions:
       contents: read
