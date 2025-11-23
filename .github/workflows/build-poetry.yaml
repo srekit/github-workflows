@@ -24,13 +24,43 @@ on:
         default: '3.13'
 
 jobs:
-  quality-and-security-checks:
-    name: Quality and Security Checks
+  #quality-and-security-checks:
+  #  name: Quality and Security Checks
+  #  runs-on: ubuntu-latest
+  #  permissions:
+  #    contents: read
+  #    packages: read
+  #    pull-requests: write
+  #  container:
+  #    image: ${{ inputs.poetry-image }}
+  #    credentials:
+  #      username: ${{ github.actor }}
+  #      password: ${{ secrets.GITHUB_TOKEN }}
+  #  steps:
+  #    - name: Checkout Repository
+  #      uses: actions/checkout@v4
+
+  #    - name: Run Poetry Quality Checks
+  #      uses: srekit/github-workflows/.github/actions/poetry-quality-checks@feature/build-poetry-workflow
+  #      with:
+  #        github-token: ${{ secrets.GITHUB_TOKEN }}
+  #        poetry-version: ${{ inputs.poetry-version }}
+  #        python-version: ${{ inputs.python-version }}
+
+  #    - name: Run Poetry Security Scan
+  #      uses: srekit/github-workflows/.github/actions/poetry-security-scan@feature/build-poetry-workflow
+  #      with:
+  #        github-token: ${{ secrets.GITHUB_TOKEN }}
+  #        poetry-version: ${{ inputs.poetry-version }}
+  #        python-version: ${{ inputs.python-version }}
+
+  generate-artifacts:
+    name: Generate Artifacts
+    #needs: [quality-and-security-checks]
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: read
-      pull-requests: write
+      packages: write
     container:
       image: ${{ inputs.poetry-image }}
       credentials:
@@ -38,52 +68,40 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout Repository
+        id: checkout
         uses: actions/checkout@v4
 
-      - name: Run Poetry Quality Checks
-        uses: srekit/github-workflows/.github/actions/poetry-quality-checks@feature/build-poetry-workflow
+      - name: Generate Poetry Artifacts
+        id: generate-poetry-artifacts
+        uses: srekit/github-workflows/.github/actions/poetry-artifacts@feature/build-poetry-workflow
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          poetry-version: ${{ inputs.poetry-version }}
           python-version: ${{ inputs.python-version }}
 
-      - name: Run Poetry Security Scan
-        uses: srekit/github-workflows/.github/actions/poetry-security-scan@feature/build-poetry-workflow
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          poetry-version: ${{ inputs.poetry-version }}
-          python-version: ${{ inputs.python-version }}
+  #generate-container-image:
+  #  name: Generate Container Image
+  #  #needs: [quality-and-security-checks]
+  #  runs-on: ubuntu-latest
+  #  permissions:
+  #    contents: read
+  #    packages: write
+  #  steps:
+  #    - name: Checkout Repository
+  #      uses: actions/checkout@v4
 
-  generate-container-image:
-    name: Generate Container Image
-    needs: [quality-and-security-checks]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+  #    - name: Generate Image Name
+  #      id: generate-image-name
+  #      uses: srekit/github-workflows/.github/actions/generage-image-name@feature/build-poetry-workflow
 
-      - name: Generate Image Name
-        id: generate-image-name
-        uses: srekit/github-workflows/.github/actions/generage-image-name@feature/build-poetry-workflow
+  #    - name: Generate image tag
+  #      id: generate-tag
+  #      uses: srekit/github-workflows/.github/actions/generate-tag@feature/build-poetry-workflow
+  #      with:
+  #        target-branch: ${{ inputs.target-branch }}
 
-      - name: Generate image tag
-        id: generate-tag
-        uses: srekit/github-workflows/.github/actions/generate-tag@feature/build-poetry-workflow
-        with:
-          target-branch: ${{ inputs.target-branch }}
+  #    - name: Build and Push Container
+  #      uses: srekit/github-workflows/.github/actions/container-build@feature/build-poetry-workflow
+  #      with:
+  #        github-token: ${{ secrets.GITHUB_TOKEN }}
+  #        image-name: ${{ steps.generate-image-name.outputs.image-name }}
+  #        tags: ${{ steps.generate-tag.outputs.tag }}
 
-      - name: Build and Push Container
-        uses: srekit/github-workflows/.github/actions/container-build@feature/build-poetry-workflow
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          image-name: ${{ steps.generate-image-name.outputs.image-name }}
-          tags: ${{ steps.generate-tag.outputs.tag }}
-
-      #- name: Upload Artifacts
-      #  uses: actions/upload-artifact@v4
-      #  with:
-      #    name: dist
-      #    path: dist/

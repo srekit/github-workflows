@@ -1,0 +1,43 @@
+name: 'Generate Poetry Artifacts'
+description: 'Generate distribution artifacts using Poetry'
+inputs:
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.13'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout Repository
+      id: checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      id: python-setup
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Configure Poetry
+      id: poetry-config
+      shell: bash
+      run: |
+        poetry config virtualenvs.create false
+
+    - name: Install Dependencies
+      id: poetry-install
+      shell: bash
+      run: |
+        poetry install --no-interaction --no-ansi
+
+    - name: Build Artifacts
+      id: build-artifacts
+      shell: bash
+      run: |
+          poetry build
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist
