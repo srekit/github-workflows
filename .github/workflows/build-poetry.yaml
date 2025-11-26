@@ -77,31 +77,30 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
 
-  #generate-container-image:
-  #  name: Generate Container Image
-  #  #needs: [quality-and-security-checks]
-  #  runs-on: ubuntu-latest
-  #  permissions:
-  #    contents: read
-  #    packages: write
-  #  steps:
-  #    - name: Checkout Repository
-  #      uses: actions/checkout@v4
+  generate-container-image:
+    name: Generate Container Image
+    needs: [quality-and-security-checks, generate-artifacts]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-  #    - name: Generate Image Name
-  #      id: generate-image-name
-  #      uses: srekit/github-workflows/.github/actions/generage-image-name@feature/build-poetry-workflow
+      - name: Generate Image Name
+        id: generate-image-name
+        uses: srekit/github-workflows/.github/actions/generage-image-name@feature/build-poetry-workflow
 
-  #    - name: Generate image tag
-  #      id: generate-tag
-  #      uses: srekit/github-workflows/.github/actions/generate-tag@feature/build-poetry-workflow
-  #      with:
-  #        target-branch: ${{ inputs.target-branch }}
+      - name: Generate image tag
+        id: generate-tag
+        uses: srekit/github-workflows/.github/actions/generate-tag@feature/build-poetry-workflow
+        with:
+          target-branch: ${{ inputs.target-branch }}
 
-  #    - name: Build and Push Container
-  #      uses: srekit/github-workflows/.github/actions/container-build@feature/build-poetry-workflow
-  #      with:
-  #        github-token: ${{ secrets.GITHUB_TOKEN }}
-  #        image-name: ${{ steps.generate-image-name.outputs.image-name }}
-  #        tags: ${{ steps.generate-tag.outputs.tag }}
-
+      - name: Build and Push Container
+        uses: srekit/github-workflows/.github/actions/container-build@feature/build-poetry-workflow
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          image-name: ${{ steps.generate-image-name.outputs.image-name }}
+          tags: ${{ steps.generate-tag.outputs.tag }}
