@@ -79,7 +79,7 @@ jobs:
 
   generate-container-image:
     name: Generate Container Image
-    needs: [quality-and-security-checks, generate-artifacts]
+    needs: [generate-artifacts]
     runs-on: ubuntu-latest
     permissions:
       contents: read
