@@ -28,12 +28,14 @@ runs:
   using: 'composite'
   steps:
     - name: Download artifacts
+      id: download-artifacts
       uses: actions/download-artifact@v4
       with:
         name: python-package-distributions
         path: dist/
 
     - name: Log in to GitHub Container Registry
+      id: ghcr-login
       uses: docker/login-action@v3
       with:
         registry: ghcr.io
