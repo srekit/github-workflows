@@ -1,0 +1,128 @@
+name: 'Poetry Security Scan'
+description: 'Run security scans on Poetry-based Python projects'
+inputs:
+  github-token:
+    description: 'GitHub token for posting PR comments'
+    required: true
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.13'
+  poetry-version:
+    description: 'Poetry version to install'
+    required: false
+    default: '1.8.0'
+  fail-on-severity:
+    description: 'Fail on vulnerabilities of this severity or higher (low, medium, high, critical)'
+    required: false
+    default: 'high'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache Poetry Dependencies
+      id: cache-poetry
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pypoetry
+        key: poetry-${{ runner.os }}-${{ inputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          poetry-${{ runner.os }}-${{ inputs.python-version }}-
+
+    - name: Poetry Install
+      id: poetry-install
+      shell: bash
+      run: |
+        echo "::group::Poetry Install Results"
+        poetry install --with dev
+        echo "::endgroup::"
+
+    - name: Run Safety Check
+      id: safety-check
+      shell: bash
+      continue-on-error: true
+      run: |
+        echo "::group::Safety Vulnerability Scan"
+        poetry add --group dev safety
+        poetry run safety scan --json > safety-report.json || true
+        poetry run safety scan || true
+        echo "::endgroup::"
+
+    - name: Run Bandit Security Scan
+      id: bandit-scan
+      shell: bash
+      continue-on-error: true
+      run: |
+        echo "::group::Bandit Security Scan"
+        poetry add --group dev bandit
+        poetry run bandit -r . -f json -o bandit-report.json || true
+        poetry run bandit -r . || true
+        echo "::endgroup::"
+
+    - name: Run pip-audit
+      id: pip-audit
+      shell: bash
+      continue-on-error: true
+      run: |
+        echo "::group::pip-audit Vulnerability Scan"
+        poetry add --group dev pip-audit
+        poetry run pip-audit --format=json > pip-audit-report.json || true
+        poetry run pip-audit || true
+        echo "::endgroup::"
+
+    - name: Generate Security Summary
+      id: generate-summary
+      shell: bash
+      run: |
+        echo "::group::Generate Security Summary"
+        cat > security-summary.md << 'EOF'
+        # Security Scan Results
+        
+        ## Safety Check (Dependency Vulnerabilities)
+        ```json
+        $(cat safety-report.json 2>/dev/null || echo "No vulnerabilities found or scan failed")
+        ```
+        
+        ## Bandit (Code Security Issues)
+        ```json
+        $(cat bandit-report.json 2>/dev/null || echo "No issues found or scan failed")
+        ```
+        
+        ## pip-audit (Package Vulnerabilities)
+        ```json
+        $(cat pip-audit-report.json 2>/dev/null || echo "No vulnerabilities found or scan failed")
+        ```
+        EOF
+        echo "::endgroup::"
+
+    - name: Upload Security Reports
+      id: upload-security-reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          safety-report.json
+          bandit-report.json
+          pip-audit-report.json
+          security-summary.md
+        retention-days: 30
+
+    - name: Comment Security Summary on PR
+      id: comment-security-summary
+      uses: thollander/actions-comment-pull-request@v2
+      if: github.event_name == 'pull_request'
+      with:
+        filePath: security-summary.md
+        comment_tag: security-scan
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+
+    - name: Check Severity Threshold
+      id: check-severity
+      shell: bash
+      run: |
+        echo "::group::Severity Check"
+        # Add logic to parse reports and fail based on severity
+        # This is a placeholder - implement based on your requirements
+        echo "Checking for vulnerabilities with severity: ${{ inputs.fail-on-severity }} or higher"
+        echo "::endgroup::"

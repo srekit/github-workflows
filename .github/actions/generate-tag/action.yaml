@@ -29,5 +29,6 @@ runs:
           exit 1
         fi
         
-        echo "tag=${TAG}" >> $GITHUB_OUTPUT
-        echo "Generated tag: ${TAG}"
+        TAG_LOWER=$(echo "${TAG}" | tr '[:upper:]' '[:lower:]')
+        echo "tag=${TAG_LOWER}" >> $GITHUB_OUTPUT
+        echo "Generated tag: ${TAG_LOWER}"

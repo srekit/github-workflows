@@ -1,0 +1,26 @@
+name: 'Generate image name for container'
+description: 'Generates the full image name for a container image based on repository and application name'
+inputs:
+  application-name:
+    description: 'Name of the application/package (optional)'
+    required: false
+    default: ''
+
+outputs:
+  image-name:
+    description: 'Generated image name'
+    value: ${{ steps.generate-image-name.outputs.image-name }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Generate Image Name'
+      id: generate-image-name
+      shell: bash
+      run: |
+        if [ "${{ inputs.application-name }}" != "" ]; then
+          IMAGE_NAME="ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ inputs.application-name }}"
+        else
+          IMAGE_NAME="ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}"
+        fi
+        echo "image-name=$IMAGE_NAME" >> $GITHUB_OUTPUT

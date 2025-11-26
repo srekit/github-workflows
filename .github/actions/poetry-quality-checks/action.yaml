@@ -1,0 +1,95 @@
+name: Poetry Quality Checks
+description: Run linting, formatting, type checking, and tests with coverage for Poetry projects
+
+inputs:
+  github-token:
+    description: 'GitHub token for posting PR comments'
+    required: true
+  mypy-continue-on-error:
+    description: 'Whether to continue on mypy errors'
+    required: false
+    default: 'false'
+  poetry-version:
+    description: 'Poetry version to install'
+    required: false
+    default: '1.8.0'
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.13'
+  upload-coverage:
+    description: 'Whether to upload coverage to Codecov'
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - name: Cache Poetry Dependencies
+      id: cache-poetry
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pypoetry
+        key: poetry-${{ runner.os }}-${{ inputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          poetry-${{ runner.os }}-${{ inputs.python-version }}-
+
+    - name: Install Dependencies
+      id: poetry-install
+      shell: bash
+      run: |
+        echo "::group::Poetry Install Results"
+        poetry install --with dev
+        echo "::endgroup::"
+
+    - name: Run Linter (Ruff)
+      id: ruff-lint
+      shell: bash
+      run: |
+        echo "::group::Ruff Linting Results"
+        poetry run ruff check .
+        echo "::endgroup::"
+
+    - name: Check Code Formatting
+      id: ruff-format
+      shell: bash
+      run: |
+        echo "::group::Ruff Format Check Results"
+        poetry run ruff format --check .
+        echo "::endgroup::"
+
+    - name: Type Check (mypy)
+      id: mypy-type-check
+      shell: bash
+      run: |
+        echo "::group::mypy Type Check Results"
+        poetry run mypy .
+        echo "::endgroup::"
+      continue-on-error: ${{ inputs.mypy-continue-on-error == 'true' }}
+
+    - name: Run Unit Tests with Coverage
+      id: pytest-coverage
+      shell: bash
+      run: |
+        echo "::group::pytest Coverage Results"
+        poetry run pytest --cov=. --cov-report=html --cov-report=term --cov-report=json
+        poetry run coverage report --format=markdown > coverage.md
+        echo "::endgroup::"
+
+    - name: Upload Coverage HTML
+      id: upload-coverage-html
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: htmlcov/
+        retention-days: 30
+
+    - name: Comment Coverage on PR
+      id: comment-coverage
+      if: github.event_name == 'pull_request' && always()
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        path: coverage.md
+        header: coverage-report
+        GITHUB_TOKEN: ${{ inputs.github-token }}

@@ -1,0 +1,111 @@
+name: Build Poetry
+
+on:
+  workflow_call:
+    inputs:
+      application-name:
+        description: 'Name of the application/package'
+        required: false
+        type: string
+      poetry-image:
+        description: 'Container image to use for building'
+        required: false
+        type: string
+        default: 'ghcr.io/srekit/custom-images/build-poetry:20251126-7f62cfb'
+      poetry-version:
+        description: 'Poetry version to use'
+        required: false
+        type: string
+        default: '1.8.0'
+      python-version:
+        description: 'Python version to use'
+        required: false
+        type: string
+        default: '3.13'
+
+jobs:
+  quality-and-security-checks:
+    name: Quality and Security Checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      pull-requests: write
+    container:
+      image: ${{ inputs.poetry-image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout Repository
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Run Poetry Quality Checks
+        id: poetry-quality-checks
+        uses: srekit/github-workflows/.github/actions/poetry-quality-checks@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          poetry-version: ${{ inputs.poetry-version }}
+          python-version: ${{ inputs.python-version }}
+
+      - name: Run Poetry Security Scan
+        id: poetry-security-scan
+        uses: srekit/github-workflows/.github/actions/poetry-security-scan@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          poetry-version: ${{ inputs.poetry-version }}
+          python-version: ${{ inputs.python-version }}
+
+  generate-artifacts:
+    name: Generate Artifacts
+    needs: [quality-and-security-checks]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    container:
+      image: ${{ inputs.poetry-image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout Repository
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Generate Poetry Artifacts
+        id: generate-poetry-artifacts
+        uses: srekit/github-workflows/.github/actions/poetry-artifacts@main
+        with:
+          python-version: ${{ inputs.python-version }}
+
+  generate-container-image:
+    name: Generate Container Image
+    needs: [generate-artifacts, quality-and-security-checks]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout Repository
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Generate Image Name
+        id: generate-image-name
+        uses: srekit/github-workflows/.github/actions/generage-image-name@main
+
+      - name: Generate image tag
+        id: generate-tag
+        uses: srekit/github-workflows/.github/actions/generate-tag@main
+        with:
+          target-branch: ${{ inputs.target-branch }}
+
+      - name: Build and Push Container
+        id: build-and-push-container
+        uses: srekit/github-workflows/.github/actions/container-build@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          image-name: ${{ steps.generate-image-name.outputs.image-name }}
+          tags: ${{ steps.generate-tag.outputs.tag }}
