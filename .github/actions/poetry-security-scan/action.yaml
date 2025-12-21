@@ -37,62 +37,52 @@ runs:
         poetry install --with dev
         echo "::endgroup::"
 
-    - name: Run Safety Check
-      id: safety-check
-      shell: bash
-      continue-on-error: true
-      run: |
-        echo "::group::Safety Vulnerability Scan"
-        poetry add --group dev safety
-        poetry run safety scan --json > safety-report.json || true
-        poetry run safety scan || true
-        echo "::endgroup::"
-
     - name: Run Bandit Security Scan
       id: bandit-scan
       shell: bash
-      continue-on-error: true
       run: |
         echo "::group::Bandit Security Scan"
         poetry add --group dev bandit
-        poetry run bandit -r . -f json -o bandit-report.json || true
-        poetry run bandit -r . || true
+    
+        # Generate filtered JSON report (only high/critical severity)
+        poetry run bandit -r . --severity-level high --exclude ./.venv -f json -o bandit-report.json || true
+    
+        # Display filtered results in logs
+        poetry run bandit -r . --severity-level high --exclude ./.venv || true
+    
+        # Check if high/critical issues were found and fail if needed
+        if [ -s bandit-report.json ]; then
+          ISSUE_COUNT=$(poetry run python -c "import json; data=json.load(open('bandit-report.json')); print(len(data.get('results', [])))")
+          if [ "$ISSUE_COUNT" -gt 0 ]; then
+            echo "::error::Found $ISSUE_COUNT high/critical security issues"
+            exit 1
+          fi
+        fi
         echo "::endgroup::"
 
-    - name: Run pip-audit
-      id: pip-audit
-      shell: bash
-      continue-on-error: true
-      run: |
-        echo "::group::pip-audit Vulnerability Scan"
-        poetry add --group dev pip-audit
-        poetry run pip-audit --format=json > pip-audit-report.json || true
-        poetry run pip-audit || true
-        echo "::endgroup::"
-
-    - name: Generate Security Summary
-      id: generate-summary
+    - name: Run Trivy Security Scan
+      id: trivy-scan
       shell: bash
       run: |
-        echo "::group::Generate Security Summary"
-        cat > security-summary.md << 'EOF'
-        # Security Scan Results
+        echo "::group::Trivy Security Scan"
         
-        ## Safety Check (Dependency Vulnerabilities)
-        ```json
-        $(cat safety-report.json 2>/dev/null || echo "No vulnerabilities found or scan failed")
-        ```
+        # Scan for high/critical vulnerabilities
+        trivy fs \
+          --severity HIGH,CRITICAL \
+          --format json \
+          --output trivy-report.json \
+          --scanners vuln,secret,misconfig \
+          .
         
-        ## Bandit (Code Security Issues)
-        ```json
-        $(cat bandit-report.json 2>/dev/null || echo "No issues found or scan failed")
-        ```
+        # Display results
+        trivy fs --severity HIGH,CRITICAL .
         
-        ## pip-audit (Package Vulnerabilities)
-        ```json
-        $(cat pip-audit-report.json 2>/dev/null || echo "No vulnerabilities found or scan failed")
-        ```
-        EOF
+        # Check if issues found
+        ISSUE_COUNT=$(jq '.Results[].Vulnerabilities | length' trivy-report.json | awk '{s+=$1} END {print s}')
+        if [ "$ISSUE_COUNT" -gt 0 ]; then
+          echo "::error::Found $ISSUE_COUNT high/critical security issues"
+          exit 1
+        fi
         echo "::endgroup::"
 
     - name: Upload Security Reports
@@ -102,9 +92,8 @@ runs:
       with:
         name: security-reports
         path: |
-          safety-report.json
           bandit-report.json
-          pip-audit-report.json
+          trivy-report.json
           security-summary.md
         retention-days: 30
 

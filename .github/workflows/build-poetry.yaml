@@ -11,7 +11,7 @@ on:
         description: 'Container image to use for building'
         required: false
         type: string
-        default: 'ghcr.io/srekit/custom-images/build-poetry:20251126-7f62cfb'
+        default: 'ghcr.io/srekit/custom-images/build-poetry:pr-4-ad1bb88'
       poetry-version:
         description: 'Poetry version to use'
         required: false
@@ -51,7 +51,7 @@ jobs:
 
       - name: Run Poetry Security Scan
         id: poetry-security-scan
-        uses: srekit/github-workflows/.github/actions/poetry-security-scan@main
+        uses: srekit/github-workflows/.github/actions/poetry-security-scan@feature/poetry-security-scan
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           poetry-version: ${{ inputs.poetry-version }}
