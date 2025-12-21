@@ -66,7 +66,6 @@ runs:
       run: |
         echo "::group::Trivy Security Scan"
         
-        # Scan for high/critical vulnerabilities
         trivy fs \
           --severity HIGH,CRITICAL \
           --format json \
@@ -74,10 +73,8 @@ runs:
           --scanners vuln,secret,misconfig \
           .
         
-        # Display results
         trivy fs --severity HIGH,CRITICAL .
         
-        # Check if issues found
         ISSUE_COUNT=$(jq '.Results[].Vulnerabilities | length' trivy-report.json | awk '{s+=$1} END {print s}')
         if [ "$ISSUE_COUNT" -gt 0 ]; then
           echo "::error::Found $ISSUE_COUNT high/critical security issues"
