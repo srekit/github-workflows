@@ -43,7 +43,7 @@ jobs:
 
       - name: Run Poetry Quality Checks
         id: poetry-quality-checks
-        uses: srekit/github-workflows/.github/actions/poetry-quality-checks@main
+        uses: srekit/github-workflows/.github/actions/poetry-quality-checks@feature/poetry-security-scan
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           poetry-version: ${{ inputs.poetry-version }}
