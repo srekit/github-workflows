@@ -87,17 +87,17 @@ runs:
       shell: bash
       run: |
         echo "::group::Generating Security Summary"
-        
+    
         cat > security-summary.md << 'EOF'
         # 🔒 Security Scan Results
-        
+    
         ## Bandit (SAST)
         EOF
-        
+    
         # Parse Bandit results
         if [ -f bandit-report.json ]; then
           BANDIT_COUNT=$(poetry run python -c "import json; data=json.load(open('bandit-report.json')); print(len(data.get('results', [])))" 2>/dev/null || echo "0")
-          
+    
           if [ "$BANDIT_COUNT" -gt 0 ]; then
             echo "- ⚠️ Found **$BANDIT_COUNT** high/critical issues" >> security-summary.md
             echo "" >> security-summary.md
@@ -105,7 +105,7 @@ runs:
         import json
         with open('bandit-report.json') as f:
             data = json.load(f)
-            for issue in data.get('results', [])[:10]:  # Limit to first 10
+            for issue in data.get('results', [])[:10]:
                 print(f"- **{issue['issue_severity']}**: {issue['issue_text']}")
                 print(f"  - File: `{issue['filename']}:{issue['line_number']}`")
         PYTHON
@@ -115,16 +115,16 @@ runs:
         else
           echo "- ℹ️ No scan results available" >> security-summary.md
         fi
-        
+    
         cat >> security-summary.md << 'EOF'
-        
+    
         ## Trivy (Dependencies & Misconfigurations)
         EOF
-        
+    
         # Parse Trivy results
         if [ -f trivy-report.json ]; then
           TRIVY_COUNT=$(jq '[.Results[]?.Vulnerabilities // [] | length] | add // 0' trivy-report.json)
-          
+    
           if [ "$TRIVY_COUNT" -gt 0 ]; then
             echo "- ⚠️ Found **$TRIVY_COUNT** high/critical vulnerabilities" >> security-summary.md
             echo "" >> security-summary.md
@@ -135,15 +135,13 @@ runs:
         else
           echo "- ℹ️ No scan results available" >> security-summary.md
         fi
-        
-        cat >> security-summary.md << 'EOF'
-        
-        ---
-        *Generated on $(date -u +'%Y-%m-%d %H:%M:%S UTC')*
-        EOF
-        
+    
+        # Add footer with evaluated date
+        echo "" >> security-summary.md
+        echo "---" >> security-summary.md
+        echo "*Generated on $(date -u +'%Y-%m-%d %H:%M:%S UTC')*" >> security-summary.md
+    
         echo "::endgroup::"
-
 
     - name: Upload Security Reports
       id: upload-security-reports
