@@ -73,7 +73,16 @@ runs:
       run: |
         echo "::group::pytest Coverage Results"
         poetry run pytest --cov=. --cov-report=html --cov-report=term --cov-report=json
-        poetry run coverage report --format=markdown > coverage.md
+        echo "# 📊 Code Coverage Report" > coverage.md
+        echo "" >> coverage.md
+        poetry run coverage report --format=markdown | awk '
+          NR==1 || NR==2 {print; next}
+          /100%/ {next}
+          {print}
+        ' >> coverage.md
+        echo "" >> coverage.md
+        echo "---" >> coverage.md
+        echo "*Generated on $(date -u +'%Y-%m-%d %H:%M:%S UTC')*" >> coverage.md
         echo "::endgroup::"
 
     - name: Upload Coverage HTML

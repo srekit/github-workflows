@@ -11,7 +11,7 @@ on:
         description: 'Container image to use for building'
         required: false
         type: string
-        default: 'ghcr.io/srekit/custom-images/build-poetry:20251126-7f62cfb'
+        default: 'ghcr.io/srekit/custom-images/build-poetry:20251223-b8d9ac1'
       poetry-version:
         description: 'Poetry version to use'
         required: false
