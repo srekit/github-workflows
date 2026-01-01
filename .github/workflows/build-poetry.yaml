@@ -25,6 +25,7 @@ on:
       target-branch:
         description: 'The target branch for the tag generation (default: main)'
         required: false
+        type: string
         default: 'main'
 
 jobs:
