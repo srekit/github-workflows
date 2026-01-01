@@ -19,16 +19,24 @@ runs:
         TARGET_BRANCH: ${{ inputs.target-branch }}
       run: |
         SHORT_HASH=$(echo $GITHUB_SHA | cut -c1-7)
-        CURRENT_BRANCH=${GITHUB_REF#refs/heads/}
         
         if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
           PR_NUMBER="${{ github.event.pull_request.number }}"
           TAG="PR-${PR_NUMBER}-${SHORT_HASH}"
-        elif [ "$GITHUB_EVENT_NAME" == "push" ] && [ "$CURRENT_BRANCH" == "$TARGET_BRANCH" ]; then
-          DATE=$(date +%Y%m%d)
-          TAG="${DATE}-${SHORT_HASH}"
+        elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          TAG="${TAG_NAME}"
+        elif [ "$GITHUB_EVENT_NAME" == "push" ]; then
+          CURRENT_BRANCH=${GITHUB_REF#refs/heads/}
+          if [ "$CURRENT_BRANCH" == "$TARGET_BRANCH" ]; then
+            DATE=$(date +%Y%m%d)
+            TAG="${DATE}-${SHORT_HASH}"
+          else
+            echo "Expected push to branch '$TARGET_BRANCH', but got '$CURRENT_BRANCH' (Ref: $GITHUB_REF)"
+            exit 1
+          fi
         else
-          echo "Expected push to branch '$TARGET_BRANCH', but got '$CURRENT_BRANCH' (Ref: $GITHUB_REF)"
+          echo "Unsupported event: $GITHUB_EVENT_NAME"
           exit 1
         fi
         
