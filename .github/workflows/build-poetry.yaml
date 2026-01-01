@@ -22,6 +22,10 @@ on:
         required: false
         type: string
         default: '3.13'
+      target-branch:
+        description: 'The target branch for the tag generation (default: main)'
+        required: false
+        default: 'main'
 
 jobs:
   quality-and-security-checks:
